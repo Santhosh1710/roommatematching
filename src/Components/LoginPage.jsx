@@ -8,6 +8,7 @@ import axiosInstance from "../axiosInstance";
 import styled from "styled-components";
 import { useFirebase } from "../Context/FirebaseContext";
 import LoadingOverlay from "./LoadingOverlay"; // Importing the LoadingOverlay component
+import './LoginPage.css';
 
 const SignUpContainer = styled.div`
   position: absolute;

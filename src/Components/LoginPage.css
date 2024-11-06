@@ -13,10 +13,7 @@
   left: 0;
 }
 
-.sign-up {
-  transform: translateX(100%);
+.body{
+  padding: 0 !important;
 }
 
-.wrapper.active .sign-up {
-  transform: translateX(0);
-}

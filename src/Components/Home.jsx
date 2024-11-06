@@ -27,7 +27,7 @@ const Home = () => {
         <Navbar onPageChange = {handleNavigation} currentPage={currentPage}/>
       </div>
       <br />
-      <div>
+      <div style={{paddingTop:"60px"}}>
       {currentPage === 'home' && <LandingPage onPageChange={handleNavigation}/>}
       {currentPage === "roommate" && <Roomate />}
       {currentPage === "mess" && <Mess />}

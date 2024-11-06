@@ -53,8 +53,3 @@
 .profile_dropdown button {
   width: 100px;
 }
-
-/* Offset the body content to avoid overlap with the fixed navbar */
-body {
-  padding-top: 60px; /* Adjust based on navbar height */
-}

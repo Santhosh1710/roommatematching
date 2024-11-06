@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { collection, addDoc } from "firebase/firestore"; // Import Firestore functions
 import { firestore } from "../firebase"; // Import the Firebase app instance
 import { toast } from "react-toastify";
+import './RoomListingForm.css';  // Import the CSS file
 
 const RoomListingForm = () => {
   const [formData, setFormData] = useState({
@@ -21,36 +22,26 @@ const RoomListingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const docRef = await addDoc(collection(firestore, "rooms"), formData);
-      toast.success("Form Submitted Successfully");
-      console.log("Document written with ID: ", docRef.id);
-      // Clear the form fields after successful submission
-      setFormData({
-        name: "",
-        regNo: "",
-        phoneNumber: "",
-        state: "",
-        hobies: "",
-        mess: "",
+      const response = await fetch('http://localhost:5000/api/user/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error('Error:', error);
+      toast.error('An error occurred while updating user.');
     }
   };
-
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        width: "400px",
-        margin: "0 auto",
-        padding: "20px",
-        border: "2px solid black",
-        borderRadius: "10px",
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        fontSize: "14px",
-      }}
-    >
+    <form onSubmit={handleSubmit} className="room-listing-form">
       <div>
         <input
           type="text"
@@ -60,13 +51,6 @@ const RoomListingForm = () => {
           value={formData.name}
           onChange={handleChange}
           required
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "20px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
         />
       </div>
       <div>
@@ -78,13 +62,6 @@ const RoomListingForm = () => {
           value={formData.regNo}
           onChange={handleChange}
           required
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "20px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
         />
       </div>
       <div>
@@ -96,13 +73,6 @@ const RoomListingForm = () => {
           value={formData.phoneNumber}
           onChange={handleChange}
           required
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "20px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
         />
       </div>
       <div>
@@ -114,16 +84,8 @@ const RoomListingForm = () => {
           value={formData.state}
           onChange={handleChange}
           required
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "20px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
         />
       </div>
-      
       <div>
         <input
           type="text"
@@ -133,13 +95,6 @@ const RoomListingForm = () => {
           value={formData.hobies}
           onChange={handleChange}
           required
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "20px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
         />
       </div>
       <div>
@@ -151,29 +106,9 @@ const RoomListingForm = () => {
           value={formData.mess}
           onChange={handleChange}
           required
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "20px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
         />
       </div>
-      <button
-        type="submit"
-        style={{
-          width: "100%",
-          padding: "10px",
-          backgroundColor: "#007bff",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        Submit
-      </button>
+      <button type="submit">Submit</button>
     </form>
   );
 };

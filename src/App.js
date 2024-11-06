@@ -72,15 +72,10 @@ function App() {
       <ToastContainer autoClose={2000} />
       <Router>
         <Routes>
-          <Route
-            path="/"
-            element={localStorage.getItem('authToken') ? <Navigate to="/home" /> : <Login onLogin={handleLogin} />}
+          <Route path="/" element={localStorage.getItem('authToken') ? <Navigate to="/home" /> : <Login onLogin={handleLogin} />}
           />
 
-          <Route
-            path="/home"
-            element={
-              localStorage.getItem('authToken') ? (
+          <Route path="/home" element={ localStorage.getItem('authToken') ? (
                 <ProtectedRoutes>
                   <Home onLogout={handleLogout} />
                 </ProtectedRoutes>
