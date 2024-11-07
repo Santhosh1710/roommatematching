@@ -12,6 +12,7 @@ import TaxiShare from "./TaxiShare";
 import LandingPage from "./roommate";
 import Mess
 from "./Mess";
+import Laundry from "./Laundry";
 
 const Home = () => {
 
@@ -30,6 +31,7 @@ const Home = () => {
       <div style={{paddingTop:"60px"}}>
       {currentPage === 'home' && <LandingPage onPageChange={handleNavigation}/>}
       {currentPage === "roommate" && <Roomate />}
+      {currentPage === "laundry" && <Laundry />}
       {currentPage === "mess" && <Mess />}
       {currentPage === 'profilePage' && <Profile/>}
       {currentPage === 'hostelInfo' && <HostelInfo onPageChange = {handleNavigation}/>}

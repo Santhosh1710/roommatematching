@@ -341,6 +341,7 @@ function Mess() {
         <>
           <h2 style={styles.sectionTitle}>Select Caterer</h2>
           <select value={selectedCaterer} onChange={handleCatererChange} style={styles.select}>
+          <option value="" disabled>Choose a Caterer</option>
             <option value="Darling Mess">Darling Mess</option>
             <option value="PR Mess">PR Mess</option>
             <option value="Zenith Mess">Zenith Mess</option>
@@ -350,6 +351,7 @@ function Mess() {
             <>
               <h2 style={styles.sectionTitle}>Select Day</h2>
               <select value={selectedDay} onChange={handleDayChange} style={styles.select}>
+              <option value="" disabled>Select a Day</option>
                 <option value="Monday">Monday</option>
                 <option value="Tuesday">Tuesday</option>
                 <option value="Wednesday">Wednesday</option>
@@ -387,6 +389,7 @@ function Mess() {
             <>
               <h2 style={styles.sectionTitle}>Select Day</h2>
               <select value={selectedDay} onChange={handleDayChange} style={styles.select}>
+              <option value="" disabled>Select a Day</option>
                  <option value="Monday">Monday</option>
                 <option value="Tuesday">Tuesday</option>
                 <option value="Wednesday">Wednesday</option>

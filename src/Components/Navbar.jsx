@@ -47,10 +47,10 @@ const Navbar = ({ onPageChange, currentPage }) => {
                 Roommate Connect
             </div>
             <div
-                className={`nav-option${selectedOption === 'hostelInfo' ? ' selected' : ''}`}
+                className={`nav-option${selectedOption === 'laundry' ? ' selected' : ''}`}
                 onClick={() => {
-                    handleSelect('hostels');
-                    onPageChange('hostelInfo');
+                    handleSelect('laundry');
+                    onPageChange('laundry');
                 }}
             >
                 Laundry Management

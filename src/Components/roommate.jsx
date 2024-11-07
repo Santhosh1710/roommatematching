@@ -38,10 +38,10 @@ export default function LandingPage({ onPageChange }) {
             Roommate Connect</h3>
         </div>
         <div style={{cursor:"pointer", width:'60%', backgroundColor:'#5199EB', borderRadius:'20px', display:'flex',flexDirection:"row", padding:"15px"}}onClick={() => {
-                  onPageChange('');
+                  onPageChange('laundry');
               }}>
           <h3 style={{flexBasis:'80%', fontSize:"20px", justifyContent:'center', alignContent:"center", color:"white"}} onClick={() => {
-                  onPageChange('');
+                  onPageChange('laundry');
               }}>
             Laundry Management</h3>
         </div>
