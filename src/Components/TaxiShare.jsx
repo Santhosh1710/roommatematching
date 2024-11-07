@@ -33,6 +33,7 @@ export default function TaxiShare() {
     setLoading(true);
     try {
       const userEmail = localStorage.getItem('email');
+      
       const response = await fetch('http://localhost:5000/api/taxi/search-taxi', {
         method: 'POST',
         headers: {

@@ -1,116 +1,267 @@
+// SearchComponent.jsx
+
 import React, { useState, useEffect } from 'react';
-import { query} from 'firebase/database'; // Import necessary Firebase database functions
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { firestore } from '../firebase';
-import { collection, getDocs, where } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+
+import Modal from './Modal'; // Assuming you have a Modal component
+
+const collectionRef = collection(firestore, 'rooms');
+
+const getRooms = async () => {
+  const snapshot = await getDocs(collectionRef);
+  snapshot.forEach(doc => {
+    console.log(doc.id, doc.data());
+  });
+};
+
+getRooms();
+
 
 const SearchComponent = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
+  const [selectedResult, setSelectedResult] = useState(null); // Selected result details
+
+   // Function to handle roommate confirmation
+   const confirmRoommate = async (roomId, newRoommate) => {
+    const roomRef = doc(firestore, 'rooms', roomId);
+
+    try {
+      // Add the new roommate to the roommates array
+      await updateDoc(roomRef, {
+        roommates: arrayUnion(newRoommate),
+      });
+      console.log('Roommate confirmed');
+      setIsModalOpen(false); // Close modal after confirmation
+    } catch (error) {
+      console.error('Error adding roommate:', error);
+    }
+  };
+
+  // Function to open modal with selected user details
+  const openModal = (result) => {
+    setSelectedResult(result);
+    setIsModalOpen(true);
+  };
+
+  // Function to close the modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedResult(null);
+  };
+
+
   useEffect(() => {
     const getData = async () => {
       setLoading(true);
       try {
-        const collectionRef = collection(firestore, "rooms");
-    
-        // Using `startAt` and `endAt` to perform range queries for each field
-        const stateQuery = query(
-          collectionRef,
-          where("state", ">=", searchQuery),
-          where("state", "<=", searchQuery + "\uf8ff")
-        );
-    
-        const hobbiesQuery = query(
-          collectionRef,
-          where("hobbies", ">=", searchQuery),
-          where("hobbies", "<=", searchQuery + "\uf8ff")
-        );
-    
-        const messQuery = query(
-          collectionRef,
-          where("mess", ">=", searchQuery),
-          where("mess", "<=", searchQuery + "\uf8ff")
-        );
-    
-        // Execute all queries and merge the results
-        const [stateSnapshot, hobbiesSnapshot, messSnapshot] = await Promise.all([
+        const collectionRef = collection(firestore, 'rooms');
+        
+        // Construct query to fetch data from Firestore
+        const stateQuery = query(collectionRef, where('state', '>=', ''), where('state', '<=', '\uf8ff'));
+        const hobiesQuery = query(collectionRef, where('hobies', '>=', ''), where('hobies', '<=', '\uf8ff'));
+        const messQuery = query(collectionRef, where('mess', '>=', ''), where('mess', '<=', '\uf8ff'));
+        
+        // Execute queries in parallel
+        const [stateSnapshot, hobiesSnapshot, messSnapshot] = await Promise.all([
           getDocs(stateQuery),
-          getDocs(hobbiesQuery),
+          getDocs(hobiesQuery),
           getDocs(messQuery),
         ]);
-    
-        // Collect all matching documents
-        const searchData = [];
-    
+  
+        // Process and combine results, removing duplicates
+        const searchData = new Set();
+        
         const processSnapshot = (snapshot) => {
           snapshot.forEach((doc) => {
-            const { name, blockName, regNo, email, phoneNumber, state, hobbies, mess } = doc.data();
-            searchData.push({ name, blockName, regNo, email, phoneNumber, state, hobbies, mess });
+            const data = doc.data();
+            searchData.add(JSON.stringify(data)); // Add as string to avoid duplicates
           });
         };
-    
-        // Process each snapshot
+  
         processSnapshot(stateSnapshot);
-        processSnapshot(hobbiesSnapshot);
+        processSnapshot(hobiesSnapshot);
         processSnapshot(messSnapshot);
-    
-        // Remove duplicates if necessary
-        const uniqueSearchData = Array.from(new Set(searchData.map(JSON.stringify))).map(JSON.parse);
-    
-        setSearchResults(uniqueSearchData);
+  
+        // Normalize and filter client-side for case-insensitive matching
+        const lowerCaseSearchQuery = searchQuery.toLowerCase();
+        const searchTerms = lowerCaseSearchQuery.split(';').map(term => term.trim());
+  
+        // Calculate match percentage and filter results
+        const filteredData = Array.from(searchData).map(JSON.parse).map((item) => {
+          let matchCount = 0;
+          const totalTerms = searchTerms.length;
+  
+          // Helper function to calculate term match in a field
+          const matchTerm = (fieldValue) => {
+            return searchTerms.filter((term) => fieldValue.toLowerCase().includes(term)).length;
+          };
+  
+          // Match against state, hobies, and mess
+          const stateMatch = item.state ? matchTerm(item.state) : 0;
+          const hobiesMatch = item.hobies ? matchTerm(item.hobies) : 0;
+          const messMatch = item.mess ? matchTerm(item.mess) : 0;
+  
+          matchCount = stateMatch + hobiesMatch + messMatch;
+  
+          // Calculate match percentage
+          const matchPercentage = ((matchCount / totalTerms) * 100).toFixed(2);
+  
+          return { ...item, matchPercentage };
+        });
+  
+        const filteredResults = filteredData.filter(result => parseFloat(result.matchPercentage) > 25);
+
+        // Sort by match percentage
+        const sortedData = filteredResults.sort((a, b) => b.matchPercentage - a.matchPercentage);
+  
+  
+        setSearchResults(sortedData);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
-    
-
+  
     if (searchQuery) {
       getData();
     } else {
-      setSearchResults([]); // Clear search results if search query is empty
+      setSearchResults([]); // Clear results if search query is empty
     }
   }, [searchQuery]);
-
-  const handleSearch = () => {
-    // Trigger useEffect by updating searchQuery state
-    setSearchQuery(searchQuery);
+  
+  
+  
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   return (
-    <div style={{ fontSize: '25px'}}>
+    <div style={{ fontSize: '20px' }}>
       <input
         type="text"
         value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search..."
-        style={{ padding: '8px', marginRight: '8px', border: '1px solid #ccc', borderRadius: '20px', boxSizing: 'border-box', width: '500px' }}
+        onChange={handleSearchChange}
+        placeholder="Search by State, hobies, or Mess Type..."
+        style={{
+          padding: '8px',
+          marginRight: '8px',
+          border: '1px solid #ccc',
+          borderRadius: '20px',
+          boxSizing: 'border-box',
+          width: '500px',
+        }}
       />
       <button
-        onClick={handleSearch}
-        style={{ padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+        onClick={() => searchQuery && setSearchQuery(searchQuery)}
+        style={{
+          padding: '8px 16px',
+          backgroundColor: '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
       >
         Search
       </button>
-      <div className="search-results" style={{marginTop:"20px"}}>
+      
+      <div className="search-results" style={{ marginTop: '20px' }}>
         {loading ? (
           <div className="loading-message">Loading...</div>
         ) : searchResults.length > 0 ? (
           searchResults.map((result, index) => (
-            <div key={index} className="search-result-item" style={{ padding: '8px', borderBottom: '1px solid #ccc', border:'2px solid black', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:"flex-start"}}>
-             <div>Name: {result.name}</div>
-             <div>Room Number: {result.roomNumber}</div>
-              <div>Block: {result.blockName}</div>
+            <div
+              key={index}
+              className="search-result-item"
+              style={{
+                cursor: 'pointer',
+                padding: '8px',
+                borderBottom: '1px solid #ccc',
+                border: '2px solid black',
+                borderRadius: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                marginBottom: '10px',
+              }}
+              onClick={() => openModal(result)} // Open modal on click
+            >
+              <div>Name: {result.name}</div>
+              {/* <div>Room Number: {result.roomNumber}</div> */}
+              {/* <div>Block: {result.blockName}</div> */}
               <div>Phone Number: {result.phoneNumber}</div>
-              <div>Email: {result.email}</div>
+              <div>Register Number: {result.regNo}</div>
+              <div>Easdfmail: {result.email}</div>
+              <div>State: {result.state}</div>
+              <div>hobies: {result.hobies}</div>
+              <div>Mess Type: {result.mess}</div>
+              <div>
+              <strong>Match Percentage:</strong> {result.matchPercentage}%
+            </div>
             </div>
           ))
         ) : (
-          <div className="no-results-message" style={{ padding: '8px', color: '#777' }}>No results found</div>
+          <div className="no-results-message" style={{ padding: '8px', color: '#777' }}>
+            No results found
+          </div>
         )}
       </div>
+      {/* Modal to confirm roommate */}
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
+        {selectedResult && (
+          <div>
+            <h2>Confirm Roommate</h2>
+            <div>
+              <p>Name: {selectedResult.name}</p>
+              <p>Phone Number: {selectedResult.phoneNumber}</p>
+              <p>Register Number: {selectedResult.regNo}</p>
+              <p>Email: {selectedResult.email}</p>
+              <p>State: {selectedResult.state}</p>
+              <p>Hobbies: {selectedResult.hobies}</p>
+              <p>Mess Type: {selectedResult.mess}</p>
+              <p>
+                <strong>Match Percentage:</strong> {selectedResult.matchPercentage}%
+              </p>
+            </div>
+            <div>
+              <button
+                onClick={() => confirmRoommate(selectedResult.roomId, selectedResult.name)} // Confirm roommate
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  marginRight: '10px',
+                }}
+              >
+                Confirm Roommate
+              </button>
+              <button
+                onClick={closeModal} // Go back
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

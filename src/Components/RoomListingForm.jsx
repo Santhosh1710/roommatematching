@@ -1,8 +1,9 @@
+// RoomListingForm.jsx
+
 import React, { useState } from "react";
 import { collection, addDoc } from "firebase/firestore"; // Import Firestore functions
 import { firestore } from "../firebase"; // Import the Firebase app instance
 import { toast } from "react-toastify";
-import './RoomListingForm.css';  // Import the CSS file
 
 const RoomListingForm = () => {
   const [formData, setFormData] = useState({
@@ -10,8 +11,9 @@ const RoomListingForm = () => {
     regNo: "",
     email: "",
     phoneNumber: "",
-    blockName: "",
-    roomNumber: "",
+    state: "",
+    hobies: "",
+    mess: "",
   });
 
   const handleChange = (e) => {
@@ -22,26 +24,39 @@ const RoomListingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/user/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      const docRef = await addDoc(collection(firestore, "rooms"), formData);
+      toast.success("Form Submitted Successfully");
+      console.log("Document written with ID: ", docRef.id);
+      
+      // Clear the form fields after successful submission
+      setFormData({
+        name: "",
+        regNo: "",
+        email: "",
+        phoneNumber: "",
+        state: "",
+        hobies: "",
+        mess: "",
       });
-      const data = await response.json();
-      if (response.ok) {
-        toast.success(data.message);
-      } else {
-        toast.error(data.message);
-      }
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('An error occurred while updating user.');
+      console.error("Error adding document: ", error);
+      toast.error("Error submitting form. Please try again.");
     }
   };
+
   return (
-    <form onSubmit={handleSubmit} className="room-listing-form">
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        width: "400px",
+        margin: "0 auto",
+        padding: "20px",
+        border: "2px solid black",
+        borderRadius: "10px",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        fontSize: "14px",
+      }}
+    >
       <div>
         <input
           type="text"
@@ -51,6 +66,13 @@ const RoomListingForm = () => {
           value={formData.name}
           onChange={handleChange}
           required
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "20px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+          }}
         />
       </div>
       <div>
@@ -62,6 +84,31 @@ const RoomListingForm = () => {
           value={formData.regNo}
           onChange={handleChange}
           required
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "20px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+          }}
+        />
+      </div>
+      <div>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "20px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+          }}
         />
       </div>
       <div>
@@ -73,6 +120,13 @@ const RoomListingForm = () => {
           value={formData.phoneNumber}
           onChange={handleChange}
           required
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "20px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+          }}
         />
       </div>
       <div>
@@ -84,6 +138,13 @@ const RoomListingForm = () => {
           value={formData.state}
           onChange={handleChange}
           required
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "20px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+          }}
         />
       </div>
       <div>
@@ -91,24 +152,54 @@ const RoomListingForm = () => {
           type="text"
           id="hobies"
           name="hobies"
-          placeholder="Hobies"
+          placeholder="hobbies"
           value={formData.hobies}
           onChange={handleChange}
           required
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "20px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+          }}
         />
       </div>
       <div>
-        <input
-          type="text"
+        <select
           id="mess"
           name="mess"
-          placeholder="Mess Type"
           value={formData.mess}
           onChange={handleChange}
           required
-        />
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "20px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+          }}
+        >
+          <option value="">Select Mess Type</option>
+          <option value="Vegetarian">Vegetarian</option>
+          <option value="Non-Vegetarian">Non-Vegetarian</option>
+          <option value="Special">Special</option>
+        </select>
       </div>
-      <button type="submit">Submit</button>
+      <button
+        type="submit"
+        style={{
+          width: "100%",
+          padding: "10px",
+          backgroundColor: "#007bff",
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+        }}
+      >
+        Submit
+      </button>
     </form>
   );
 };

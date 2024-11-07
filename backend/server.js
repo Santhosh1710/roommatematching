@@ -1,10 +1,10 @@
+require("dotenv").config();
+const dbConfig = require("./config/dbconfig");
+
 const express = require("express");
 const cors = require("cors"); // Import CORS
 const app = express();
-require("dotenv").config();
-const dbConfig = require("./config/dbconfig");
-require("dotenv").config();
-const mongoose = require("mongoose");
+
 const User = require("./models/user");
 const Taxi = require("./models/taxi");
 
