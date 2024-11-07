@@ -23,8 +23,6 @@ const Navbar = ({ onPageChange, currentPage }) => {
         setSelectedOption(option);
         onPageChange(option);
     };
-    console.log(selectedOption);
-    console.log(currentPage);
 
     return (
         <div className="header" style={{ display: 'flex', flexDirection: 'row', alignContent: 'flex-end', width: '100%', boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)', padding: '10px', fontFamily: 'monospace', justifyContent: "space-around" }}>

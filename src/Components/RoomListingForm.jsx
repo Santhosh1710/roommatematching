@@ -14,7 +14,8 @@ const RoomListingForm = () => {
     state: "",
     hobies: "",
     mess: "",
-  });
+    roommates: [],
+    });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,6 +38,7 @@ const RoomListingForm = () => {
         state: "",
         hobies: "",
         mess: "",
+        roommates: [],
       });
     } catch (error) {
       console.error("Error adding document: ", error);

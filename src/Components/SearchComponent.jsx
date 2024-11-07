@@ -1,47 +1,95 @@
 // SearchComponent.jsx
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, setDoc, arrayUnion, doc } from 'firebase/firestore';
+import { toast } from 'react-toastify';
 import { firestore } from '../firebase';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+
 
 import Modal from './Modal'; // Assuming you have a Modal component
 
 const collectionRef = collection(firestore, 'rooms');
 
-const getRooms = async () => {
-  const snapshot = await getDocs(collectionRef);
-  snapshot.forEach(doc => {
-    console.log(doc.id, doc.data());
-  });
-};
-
-getRooms();
 
 
 const SearchComponent = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
   const [selectedResult, setSelectedResult] = useState(null); // Selected result details
+  console.log(selectedResult);
+  
+const userEmail = localStorage.getItem('email');
 
-   // Function to handle roommate confirmation
-   const confirmRoommate = async (roomId, newRoommate) => {
-    const roomRef = doc(firestore, 'rooms', roomId);
+// Function to handle roommate confirmation
+const confirmRoommate = async (email) => {
+  const collectionRef = collection(firestore, 'rooms');
 
-    try {
-      // Add the new roommate to the roommates array
-      await updateDoc(roomRef, {
-        roommates: arrayUnion(newRoommate),
+  try {
+    // Step 1: Add userEmail to the specified email's roommate list
+    const emailQuery = query(collectionRef, where('email', '==', email));
+    const querySnapshot = await getDocs(emailQuery);
+
+    if (!querySnapshot.empty) {
+      querySnapshot.forEach(async (docSnapshot) => {
+        console.log(`Fetched room document for email: ${email}`, docSnapshot.data());
+        console.log(`Adding user email ${userEmail} to ${email}'s roommates array`);
+
+        // Update the roommates array in the fetched document
+        await updateDoc(docSnapshot.ref, {
+          roommates: arrayUnion(userEmail),
+        });
+        
       });
-      console.log('Roommate confirmed');
-      setIsModalOpen(false); // Close modal after confirmation
-    } catch (error) {
-      console.error('Error adding roommate:', error);
+    } else {
+      console.error(`Room not found for ${email}. Creating a new room document.`);
+      const roomRef = doc(collectionRef, email);
+
+      // Create a new document with the initial roommates array if it doesn't exist
+      await setDoc(roomRef, {
+        email,
+        roommates: [userEmail],
+      });
+      
     }
-  };
+
+    // Step 2: Add email to the userEmail's roommate list
+    const userQuery = query(collectionRef, where('email', '==', userEmail));
+    const userSnapshot = await getDocs(userQuery);
+
+    if (!userSnapshot.empty) {
+      userSnapshot.forEach(async (docSnapshot) => {
+        console.log(`Fetched room document for user email: ${userEmail}`, docSnapshot.data());
+        console.log(`Adding ${email} to ${userEmail}'s roommates array`);
+
+        // Update the roommates array in the user's document
+        await updateDoc(docSnapshot.ref, {
+          roommates: arrayUnion(email),
+        });
+        
+      });
+    } else {
+      console.error(`Room not found for ${userEmail}. Creating a new room document.`);
+      const userRoomRef = doc(collectionRef, userEmail);
+
+      // Create a new document for the user if it doesn't exist
+      await setDoc(userRoomRef, {
+        email: userEmail,
+        roommates: [email],
+      });
+      
+    }
+
+    toast.success(`Roommate confirmation completed between ${userEmail} and ${email}`);
+    setIsModalOpen(false);
+  } catch (error) {
+    console.error('Error confirming roommate:', error);
+    toast.error('Error confirming roommate');
+  }
+};
+
 
   // Function to open modal with selected user details
   const openModal = (result) => {
@@ -120,7 +168,6 @@ const SearchComponent = () => {
         // Sort by match percentage
         const sortedData = filteredResults.sort((a, b) => b.matchPercentage - a.matchPercentage);
   
-  
         setSearchResults(sortedData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -194,11 +241,11 @@ const SearchComponent = () => {
               onClick={() => openModal(result)} // Open modal on click
             >
               <div>Name: {result.name}</div>
-              {/* <div>Room Number: {result.roomNumber}</div> */}
+              <div>Room Number: {result.roomNumber}</div>
               {/* <div>Block: {result.blockName}</div> */}
               <div>Phone Number: {result.phoneNumber}</div>
               <div>Register Number: {result.regNo}</div>
-              <div>Easdfmail: {result.email}</div>
+              <div>Email: {result.email}</div>
               <div>State: {result.state}</div>
               <div>hobies: {result.hobies}</div>
               <div>Mess Type: {result.mess}</div>
@@ -232,7 +279,7 @@ const SearchComponent = () => {
             </div>
             <div>
               <button
-                onClick={() => confirmRoommate(selectedResult.roomId, selectedResult.name)} // Confirm roommate
+                onClick={() => confirmRoommate(selectedResult.email)} // Confirm roommate
                 style={{
                   padding: '8px 16px',
                   backgroundColor: '#28a745',
